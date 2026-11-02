@@ -11,6 +11,46 @@ const SPLITTABLE = '[data-split], ul, ol';
 const INTERACTIVE = 'a, button, input, textarea, select, summary, label, [data-no-turn]';
 const FONTS = ['400 1em Caveat', '700 1em Caveat', '1em "Special Elite"', '400 1em "IBM Plex Sans"', '600 1em "IBM Plex Sans"', 'italic 400 1em "IBM Plex Sans"', '1em "IBM Plex Mono"'];
 
+// No two neighbouring pages are the same paper: a junk journal is a stack of whatever was to hand.
+const SHEETS = ['cream', 'kraft', 'legal', 'white', 'mint', 'cream', 'pink', 'news', 'blue', 'cream', 'kraft', 'white'];
+const TITLE_SHEETS = ['kraft', 'white', 'news', 'pink', 'cream', 'mint', 'blue'];
+const GRID_SHEETS = ['white', 'cream', 'blue'];
+const TAPES = ['', 'tape--pink', 'tape--blue', 'tape--green'];
+
+// Small seeded RNG so every page keeps the same look across re-layouts.
+function rng(seed: number) {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+// A torn outline for a sheet: straight along the spine, ragged on the other three sides,
+// sometimes trimmed short or missing a corner. Points are written for a right-hand page
+// (x = u% - du px) and mirrored for a left-hand one.
+function deckle(rand: () => number, side: 'left' | 'right') {
+  const pts: [number, number, number, number][] = [];
+  const top = rand() < 0.25 ? 4 + rand() * 8 : 0;
+  pts.push([0, 0, 0, top]);
+  for (let u = 12; u < 100; u += 12 + rand() * 6) pts.push([u, 0, 0, top + rand() * 3]);
+  pts.push([100, 1 + rand() * 3, 0, top + rand() * 2]);
+  for (let v = 3; v < 97; v += 3 + rand() * 4) pts.push([100, rand() * 5, v, 0]);
+  if (rand() < 0.22) {
+    const cut = 18 + rand() * 26;
+    pts.push([100, rand() * 3, 100, -cut], [100, cut + rand() * 10, 100, -rand() * 2]);
+  } else {
+    pts.push([100, 1 + rand() * 4, 100, -rand() * 3]);
+  }
+  for (let u = 88; u > 0; u -= 12 + rand() * 6) pts.push([u, 0, 100, -rand() * 3]);
+  pts.push([0, 0, 100, 0]);
+  const x = ([u, du]: [number, number, number, number]) =>
+    side === 'right' ? `calc(${u.toFixed(1)}% - ${du.toFixed(1)}px)` : `calc(${(100 - u).toFixed(1)}% + ${du.toFixed(1)}px)`;
+  const y = ([, , v, dv]: [number, number, number, number]) => `calc(${v.toFixed(1)}% + ${dv.toFixed(1)}px)`;
+  return `polygon(${pts.map((p) => `${x(p)} ${y(p)}`).join(', ')})`;
+}
+
 interface Chapter {
   id: string;
   label: string;
@@ -46,6 +86,8 @@ async function init(root: HTMLElement) {
   const nextBtn = $<HTMLButtonElement>('[data-next]');
   const fillers = [...$<HTMLTemplateElement>('[data-filler]').content.children];
   const cover = root.querySelector<HTMLElement>('[data-source] > [data-cover]');
+  const sheafL = root.querySelector<HTMLElement>('[data-sheaf="left"]');
+  const sheafR = root.querySelector<HTMLElement>('[data-sheaf="right"]');
 
   const chapters: Chapter[] = [...root.querySelectorAll<HTMLElement>('[data-source] > .chapter')].map((el, i, all) => {
     const tab = document.createElement('button');
@@ -92,10 +134,32 @@ async function init(root: HTMLElement) {
     return el;
   }
 
+  // Paper, tilt, torn edge, the odd crease or bit of tape. Seeded by the page's position so a
+  // re-layout doesn't reshuffle the look of the page you're on.
+  function dressSheet(el: HTMLElement, kind: string, i: number, side: 'left' | 'right') {
+    const rand = rng(i * 7919 + 17);
+    const list = kind === 'title' ? TITLE_SHEETS : kind === 'grid' ? GRID_SHEETS : SHEETS;
+    el.dataset.sheet = list[(i * 5 + Math.floor(rand() * 2)) % list.length];
+    el.style.setProperty('--tilt', `${((rand() - 0.5) * 1.3).toFixed(2)}deg`);
+    el.style.setProperty('--shift', `${((rand() - 0.5) * 6).toFixed(1)}px ${((rand() - 0.5) * 8).toFixed(1)}px`);
+    el.style.clipPath = deckle(rand, side);
+    if (rand() < 0.16) el.dataset.crumpled = '';
+    if (kind !== 'title' && rand() < 0.3) {
+      const tape = div(`tape page-tape ${TAPES[Math.floor(rand() * TAPES.length)]}`);
+      tape.setAttribute('aria-hidden', 'true');
+      tape.style.setProperty('--r', `${((rand() - 0.5) * 24).toFixed(1)}deg`);
+      tape.style.setProperty('--at', `${(12 + rand() * 50).toFixed(0)}%`);
+      el.append(tape);
+    }
+  }
+  let blanks = 0;
+
   function makePage(kind: string, ch: Chapter | null) {
     const el = document.createElement('article');
     el.className = `page page--${kind}`;
     el.tabIndex = -1;
+    const i = pages.length;
+    if (kind !== 'cover') dressSheet(el, kind, i, desktop && i % 2 === 1 ? 'left' : 'right');
     if (ch) {
       el.dataset.chapter = ch.id;
       el.style.setProperty('--tab', ch.color);
@@ -217,6 +281,16 @@ async function init(root: HTMLElement) {
     slotR.replaceChildren(...only(pageEl(r)));
   }
 
+  // Sheaf sheets are ordered outermost first; show enough of them for the share of the book on that side.
+  function thicken(sheaf: HTMLElement | null, share: number) {
+    if (!sheaf) return;
+    const sheets = sheaf.querySelectorAll<HTMLElement>('.nb-sheet');
+    // it's an overstuffed journal: even a few pages bulge, so never let a side go thin
+    const count = share > 0 ? Math.round((0.4 + 0.6 * share) * sheets.length) : 0;
+    sheets.forEach((s, i) => (s.hidden = i < sheets.length - count));
+    for (const extra of sheaf.querySelectorAll<HTMLElement>('[data-min]')) extra.hidden = count < Number(extra.dataset.min);
+  }
+
   function chrome() {
     const [l, r] = pagesOf(spread);
     const shown = [l, r].filter((i): i is number => i !== null && i < pages.length);
@@ -232,8 +306,9 @@ async function init(root: HTMLElement) {
     const total = Math.max(pages.length - 1, 1);
     const first = shown[0] ?? 0;
     const last = shown[shown.length - 1] ?? 0;
-    book.style.setProperty('--stack-l', `${Math.round((first / total) * 9) + 1}px`);
-    book.style.setProperty('--stack-r', `${Math.round(((total - last) / total) * 9) + 1}px`);
+    // the wad of pages on each side grows and shrinks as you read
+    thicken(sheafL, desktop && l !== null ? first / total : 0);
+    thicken(sheafR, (total - last) / total);
     live.textContent = spread === 0 ? 'Cover' : `${current?.label ?? ''}, page ${first}${last !== first ? `–${last}` : ''} of ${total}`;
 
     if (!desktop && current) {
@@ -255,7 +330,11 @@ async function init(root: HTMLElement) {
     leaf.append(front, back);
     return { leaf, front, back };
   }
-  const blank = () => div('page page--blank');
+  function blank(side: 'left' | 'right') {
+    const el = div('page page--blank');
+    dressSheet(el, 'blank', 1000 + blanks++, side);
+    return el;
+  }
 
   function swing(p: Leaf, from: number, to: number, delay: number, duration: number, z: [number, number]) {
     const opts: KeyframeAnimationOptions = { duration, delay, easing: 'cubic-bezier(0.42, 0.08, 0.28, 1)', fill: 'both' };
@@ -277,8 +356,8 @@ async function init(root: HTMLElement) {
 
     if (!desktop) {
       const p = makeLeaf('solo');
-      p.front.prepend(fwd ? (ra ?? blank()) : (rb ?? blank()));
-      p.back.prepend(blank());
+      p.front.prepend(fwd ? (ra ?? blank('right')) : (rb ?? blank('right')));
+      p.back.prepend(blank('left'));
       if (fwd) slotR.replaceChildren(...only(rb));
       spreadEl.append(p.leaf);
       await (fwd ? swing(p, 0, -180, 0, 650, [10, 10]) : swing(p, -180, 0, 0, 650, [10, 10]));
@@ -292,8 +371,8 @@ async function init(root: HTMLElement) {
     const leaves: Leaf[] = [];
     for (let k = 0; k < n; k++) {
       const p = makeLeaf(fwd ? 'fwd' : 'back');
-      p.front.prepend((k === 0 ? (fwd ? ra : la) : null) ?? blank());
-      p.back.prepend((k === n - 1 ? (fwd ? lb : rb) : null) ?? blank());
+      p.front.prepend((k === 0 ? (fwd ? ra : la) : null) ?? blank(fwd ? 'right' : 'left'));
+      p.back.prepend((k === n - 1 ? (fwd ? lb : rb) : null) ?? blank(fwd ? 'left' : 'right'));
       leaves.push(p);
     }
     if (fwd) slotR.replaceChildren(...only(rb));

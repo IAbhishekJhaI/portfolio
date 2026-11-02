@@ -4,17 +4,72 @@
 import '../../styles/notebook.css';
 import Doodle from './Doodle.astro';
 
-const rings = Array.from({ length: 17 });
+// The fat, overstuffed page block: loose sheets of every kind of paper poking out at odd
+// angles. Fixed seed so the mess is the same on every visit. Outermost sheet first.
+let seed = 20261103;
+const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const papers = ['#fdf8ec', '#d6b688', '#dcefe0', '#fbf0b0', '#f8dde2', '#ebe6d9', '#fbfaf5', '#dde9f6', '#c95454', '#9fc7b3', '#f2c6a0', '#2c2a2e', '#e9d27a', '#b9a3d8'];
+const sheaf = (n: number) =>
+  Array.from({ length: n }, (_, i) => {
+    const depth = n - i;
+    return {
+      style: [
+        `--x: ${(depth * 3.3 + rand() * 9).toFixed(1)}px`,
+        `--t: ${(rand() * 40 - 32).toFixed(1)}px`,
+        `--b: ${(rand() * 36 - 28).toFixed(1)}px`,
+        `--r: ${(rand() * 5 - 2.5).toFixed(2)}deg`,
+        `--c: ${papers[Math.floor(rand() * papers.length)]}`,
+      ].join('; '),
+      torn: rand() < 0.55,
+      lined: rand() < 0.3,
+    };
+  });
+const left = sheaf(18);
+const right = sheaf(18);
+const stitches = Array.from({ length: 9 });
 ---
 
 <div class="notebook" data-notebook>
   <div class="nb-book" data-book data-closed>
+    <div class="nb-tucks" aria-hidden="true">
+      <span class="nb-ribbon"></span>
+      <span class="nb-tuck-ticket">admit one · 18 apr</span>
+      <span class="nb-tuck-photo"></span>
+      <span class="nb-tuck-leaf"><Doodle name="flower" /></span>
+    </div>
+
+    <div class="nb-sheaf nb-sheaf--left" data-sheaf="left" aria-hidden="true">
+      {left.map((s) => <span class:list={['nb-sheet', { torn: s.torn, lined: s.lined }]} style={s.style} />)}
+      <span class="nb-wad" data-min="4" style="--w: 92px; --h: 58px; top: -44px; left: 18%; --r: -14deg"></span>
+      <span class="nb-wad nb-wad--b nb-wad--kraft" data-min="7" style="--w: 70px; --h: 78px; top: 8%; left: -64px; --r: 22deg"></span>
+      <span class="nb-wad nb-wad--b nb-wad--lined" data-min="10" style="--w: 84px; --h: 52px; bottom: -40px; left: 46%; --r: 8deg"></span>
+      <span class="nb-wad" data-min="13" style="--w: 64px; --h: 70px; bottom: 6%; left: -56px; --r: -30deg"></span>
+    </div>
+    <div class="nb-sheaf nb-sheaf--right" data-sheaf="right" aria-hidden="true">
+      {right.map((s) => <span class:list={['nb-sheet', { torn: s.torn, lined: s.lined }]} style={s.style} />)}
+      <span class="nb-wad" data-min="3" style="--w: 100px; --h: 62px; top: -46px; left: 54%; --r: 9deg"></span>
+      <span class="nb-wad nb-wad--b nb-wad--lined" data-min="6" style="--w: 86px; --h: 54px; bottom: -42px; left: 26%; --r: -6deg"></span>
+      <span class="nb-wad nb-wad--b nb-wad--kraft" data-min="9" style="--w: 62px; --h: 54px; top: -36px; left: 14%; --r: 30deg"></span>
+      <span class="nb-wad" data-min="12" style="--w: 70px; --h: 66px; bottom: -30px; right: -54px; --r: -18deg"></span>
+    </div>
+
     <nav class="nb-tabs" data-tabs aria-label="Chapters"></nav>
     <div class="nb-spread" data-spread>
       <div class="nb-slot nb-slot--left" data-slot="left" data-side="left"></div>
       <div class="nb-slot nb-slot--right" data-slot="right" data-side="right"></div>
     </div>
-    <div class="nb-rings" aria-hidden="true">{rings.map(() => <span />)}</div>
+
+    <div class="nb-binding" aria-hidden="true">{stitches.map(() => <span />)}</div>
+    <svg class="nb-tails" viewBox="0 0 60 150" fill="none" stroke-linecap="round" aria-hidden="true">
+      <path d="M28 0 C 22 30, 40 52, 30 84 S 18 126, 26 148" stroke="#6e4fa3" stroke-width="3.5" />
+      <path d="M33 0 C 42 26, 24 62, 38 96 S 46 128, 40 142" stroke="#8a6bbf" stroke-width="3" />
+      <path d="M30 0 C 34 20, 52 40, 50 70" stroke="#5e3f94" stroke-width="2.5" />
+      <circle cx="31" cy="92" r="5" fill="#f4a7b4" />
+      <circle cx="28" cy="104" r="5" fill="#fdf8ec" />
+      <circle cx="27" cy="116" r="5" fill="#9ccaf0" />
+      <circle cx="49" cy="66" r="4" fill="#f6c96f" />
+    </svg>
+
     <button class="nb-corner nb-corner--prev" type="button" data-prev aria-label="Previous page"></button>
     <button class="nb-corner nb-corner--next" type="button" data-next aria-label="Next page"></button>
   </div>
