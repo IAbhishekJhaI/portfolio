@@ -37,7 +37,7 @@
 
   --font-hand: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
   --font-type: 'Special Elite', 'Courier New', monospace;
-  --font-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-body: 'Kalam', 'Segoe Print', 'Comic Sans MS', cursive;
   --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
 
   /* textures, all generated: paper grain, wood grain, rubber-stamp speckle */
@@ -147,7 +147,7 @@ a:hover {
 
 /* bold reads as a highlighter stroke */
 strong {
-  font-weight: 600;
+  font-weight: 700;
   padding: 0 0.1em;
   background-image: linear-gradient(transparent 55%, var(--highlight) 55%, var(--highlight) 92%, transparent 92%);
   -webkit-box-decoration-break: clone;

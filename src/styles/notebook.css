@@ -15,10 +15,14 @@
   padding: 24px 16px 40px;
 }
 
+/* The open book takes the whole desk: page size comes straight from the viewport, leaving
+   room only for the tabs, the bulging page block and what's poking out of it. Pages are never
+   wider than they are tall, and the text grows with them so lines don't run too long. */
 @media (min-width: 960px) and (min-height: 560px) {
   .notebook {
-    --pw: min(540px, calc((100vw - 360px) / 2), calc((100svh - 190px) / 1.34));
-    --ph: calc(var(--pw) * 1.34);
+    --ph: calc(100svh - 110px);
+    --pw: min(calc((100vw - 290px) / 2), calc(var(--ph) * 0.95));
+    --page-font: clamp(15px, calc(var(--pw) * 0.031), 21px);
   }
 }
 
@@ -29,7 +33,8 @@
 
 @media (min-width: 960px) and (min-height: 560px) {
   .js .notebook {
-    padding: 64px 24px 14px;
+    gap: 0;
+    padding: 52px 24px 58px;
   }
 }
 
@@ -84,9 +89,10 @@
   .nb-book::before {
     inset: -10px -12px -12px;
   }
-  /* closed: only the front cover is showing, so slide it to the middle */
+  /* closed: only the front cover is showing, smaller and slid to the middle of the desk.
+     Opening grows it to full size as the cover swings over. (-0.36 = -0.5 × the 0.72 scale) */
   .nb-book[data-closed] {
-    transform: translateX(calc(var(--pw) * -0.5));
+    transform: translateX(calc(var(--pw) * -0.36)) scale(0.72);
   }
   .nb-book[data-closed]::before {
     left: calc(var(--pw) - 4px);
@@ -839,9 +845,14 @@
   display: none;
 }
 @media (min-width: 960px) and (min-height: 560px) {
+  /* pencilled in the corner of the desk, so it doesn't cost the book any height */
   .nb-hint {
-    justify-self: start; /* keep clear of the yarn tails under the spine */
-    padding-left: 8%;
+    position: fixed;
+    z-index: 5;
+    left: 18px;
+    bottom: 12px;
+    padding: 0;
+    font-size: 1.05rem;
   }
   .nb-hint--wide {
     display: inline;

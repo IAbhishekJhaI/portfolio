@@ -9,7 +9,7 @@ const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)');
 const KEEP_WITH_NEXT = 'h1, h2, h3, h4, h5, h6, header, [data-keep-next]';
 const SPLITTABLE = '[data-split], ul, ol';
 const INTERACTIVE = 'a, button, input, textarea, select, summary, label, [data-no-turn]';
-const FONTS = ['400 1em Caveat', '700 1em Caveat', '1em "Special Elite"', '400 1em "IBM Plex Sans"', '600 1em "IBM Plex Sans"', 'italic 400 1em "IBM Plex Sans"', '1em "IBM Plex Mono"'];
+const FONTS = ['400 1em Caveat', '700 1em Caveat', '1em "Special Elite"', '400 1em Kalam', '700 1em Kalam', '1em "IBM Plex Mono"'];
 
 // No two neighbouring pages are the same paper: a junk journal is a stack of whatever was to hand.
 const SHEETS = ['cream', 'kraft', 'legal', 'white', 'mint', 'cream', 'pink', 'news', 'blue', 'cream', 'kraft', 'white'];
