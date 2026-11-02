@@ -1,0 +1,649 @@
+/* The notebook: book, pages, tabs and the turning leaf.
+   Global on purpose: pages are built at runtime, so component-scoped styles can't reach them.
+   Phones/tablets get one page at a time; the two-page spread kicks in at the media query below. */
+
+.notebook {
+  --pw: min(560px, calc(100vw - 44px));
+  --ph: max(420px, calc(100svh - 128px));
+  --page-font: clamp(15px, calc(var(--pw) * 0.031), 16.5px);
+  position: relative;
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 12px;
+  min-height: 100svh;
+  padding: 24px 16px 40px;
+}
+
+@media (min-width: 960px) and (min-height: 560px) {
+  .notebook {
+    --pw: min(540px, calc((100vw - 260px) / 2), calc((100svh - 100px) / 1.34));
+    --ph: calc(var(--pw) * 1.34);
+  }
+}
+
+.js .notebook {
+  overflow: hidden;
+  padding-top: 72px;
+}
+
+@media (min-width: 960px) and (min-height: 560px) {
+  .js .notebook {
+    padding: 36px 24px 14px;
+  }
+}
+
+[data-instant] *,
+[data-instant] *::before {
+  transition: none !important;
+}
+
+.nb-book,
+.nb-hint {
+  display: none;
+}
+.js .nb-book,
+.js .nb-hint {
+  display: block;
+}
+.js .nb-source {
+  display: none;
+}
+
+/* ---------- the book ---------- */
+
+.nb-book {
+  position: relative;
+  width: var(--pw);
+  height: var(--ph);
+  margin-left: 12px; /* room for the spiral */
+  transition: transform 0.75s cubic-bezier(0.42, 0.08, 0.28, 1);
+}
+
+/* hardcover board peeking out around the pages */
+.nb-book::before {
+  content: '';
+  position: absolute;
+  inset: -8px -10px -10px -6px;
+  z-index: 0;
+  border-radius: 10px;
+  background-color: var(--board);
+  background-image:
+    var(--grain),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.07) 0 1px, transparent 1px 3px);
+  box-shadow: var(--book-shadow);
+  transition: left 0.75s cubic-bezier(0.42, 0.08, 0.28, 1);
+}
+
+@media (min-width: 960px) and (min-height: 560px) {
+  .nb-book {
+    width: calc(var(--pw) * 2);
+    margin-left: 0;
+  }
+  .nb-book::before {
+    inset: -10px -12px -12px;
+  }
+  /* closed: only the front cover is showing, so slide it to the middle */
+  .nb-book[data-closed] {
+    transform: translateX(calc(var(--pw) * -0.5));
+  }
+  .nb-book[data-closed]::before {
+    left: calc(var(--pw) - 4px);
+  }
+}
+
+.nb-spread {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  perspective: 1800px;
+  touch-action: pan-y;
+}
+
+.nb-slot {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1;
+  width: var(--pw);
+  cursor: pointer;
+}
+.nb-slot--left {
+  display: none;
+}
+
+@media (min-width: 960px) and (min-height: 560px) {
+  .nb-spread {
+    perspective: 2600px;
+  }
+  .nb-slot--left {
+    display: block;
+  }
+  .nb-slot--right {
+    left: var(--pw);
+  }
+}
+
+/* the stack of pages underneath, thicker the more pages are on that side */
+.nb-slot::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: 3px;
+  bottom: calc(-1 * var(--stack, 4px));
+  border: 1px solid var(--paper-edge);
+  background: var(--paper-shade);
+}
+.nb-slot--right::before {
+  --stack: var(--stack-r, 4px);
+  left: 0;
+  right: calc(-1 * var(--stack));
+  border-radius: 0 7px 7px 0;
+}
+.nb-slot--left::before {
+  --stack: var(--stack-l, 4px);
+  left: calc(-1 * var(--stack));
+  right: 0;
+  border-radius: 7px 0 0 7px;
+}
+.nb-slot:empty::before {
+  display: none;
+}
+
+/* spiral binding */
+.nb-rings {
+  position: absolute;
+  z-index: 4;
+  top: 1.5%;
+  bottom: 1.5%;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  pointer-events: none;
+}
+.nb-rings span {
+  position: relative;
+  display: block;
+  width: 32px;
+  height: 11px;
+  translate: -50% 0;
+  border: 3px solid #9a9ca3;
+  border-radius: 6px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+.nb-rings span::before,
+.nb-rings span::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  margin-top: -3px;
+  border-radius: 50%;
+  background: #3a3026;
+}
+.nb-rings span::before {
+  left: 1px;
+}
+.nb-rings span::after {
+  right: 1px;
+}
+
+@media (min-width: 960px) and (min-height: 560px) {
+  .nb-rings {
+    left: var(--pw);
+  }
+}
+
+/* ---------- chapter tabs ---------- */
+
+/* phones: a strip of folder tabs along the top edge */
+.nb-tabs {
+  position: absolute;
+  z-index: 1;
+  left: 16px;
+  right: 44px; /* the theme sticker sits at the end of the strip */
+  bottom: 100%;
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 46px;
+  padding: 0 4px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+}
+.nb-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.nb-tab {
+  flex: none;
+  height: 40px;
+  padding: 0 14px 10px;
+  border: 0;
+  border-radius: 10px 10px 0 0;
+  background-color: var(--tab);
+  background-image: var(--grain);
+  color: var(--ink);
+  font-family: var(--font-hand);
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1;
+  box-shadow: 1px -1px 3px rgba(40, 24, 10, 0.22);
+  translate: 0 10px;
+  cursor: pointer;
+  transition: translate 0.2s ease;
+}
+.nb-tab:hover {
+  translate: 0 6px;
+}
+.nb-tab[aria-current] {
+  translate: 0 2px;
+  font-weight: 700;
+}
+.nb-tab:focus-visible {
+  outline-offset: -4px;
+}
+
+/* desktop: divider tabs sticking out of the page edges. Chapters you've passed
+   move to the left edge, like the real thing. */
+@media (min-width: 960px) and (min-height: 560px) {
+  .nb-tabs {
+    inset: 0;
+    display: block;
+    height: auto;
+    padding: 0;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .nb-tab {
+    --slot: calc(var(--ph) * 0.86 / var(--n));
+    position: absolute;
+    top: calc(var(--ph) * 0.07 + var(--i) * var(--slot));
+    left: calc(100% - 20px);
+    width: 120px;
+    height: min(calc(var(--slot) - 6px), 64px);
+    padding: 0 10px 0 30px;
+    border-radius: 0 12px 12px 0;
+    text-align: left;
+    box-shadow: 2px 2px 3px rgba(40, 24, 10, 0.3);
+    translate: 0 0;
+    pointer-events: auto;
+    transition:
+      left 0.6s cubic-bezier(0.42, 0.08, 0.28, 1),
+      translate 0.2s ease;
+  }
+  .nb-tab:hover {
+    translate: 4px 0;
+  }
+  .nb-tab[aria-current] {
+    translate: 8px 0;
+  }
+  .nb-tab[data-side='left'] {
+    left: -100px;
+    padding: 0 30px 0 10px;
+    border-radius: 12px 0 0 12px;
+    text-align: right;
+    box-shadow: -2px 2px 3px rgba(40, 24, 10, 0.3);
+  }
+  .nb-tab[data-side='left']:hover {
+    translate: -4px 0;
+  }
+  .nb-tab[data-side='left'][aria-current] {
+    translate: -8px 0;
+  }
+}
+
+/* ---------- dog-eared corners ---------- */
+
+.nb-corner {
+  position: absolute;
+  z-index: 5;
+  bottom: 0;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  background: linear-gradient(to top left, var(--board) 50%, var(--paper-shade) 50%);
+  filter: drop-shadow(-1px -1px 1px rgba(40, 24, 10, 0.25));
+  cursor: pointer;
+  transition:
+    width 0.2s ease,
+    height 0.2s ease;
+}
+.nb-corner--next {
+  right: 0;
+}
+.nb-corner--prev {
+  left: 0;
+  background: linear-gradient(to top right, var(--board) 50%, var(--paper-shade) 50%);
+  filter: drop-shadow(1px -1px 1px rgba(40, 24, 10, 0.25));
+}
+.nb-corner:hover,
+.nb-corner:focus-visible {
+  width: 42px;
+  height: 42px;
+}
+.nb-corner:disabled {
+  display: none;
+}
+
+/* ---------- the leaf that turns ---------- */
+
+.nb-leaf {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: var(--pw);
+  transform-origin: left center;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+@media (min-width: 960px) and (min-height: 560px) {
+  .nb-leaf--fwd {
+    left: var(--pw);
+  }
+  .nb-leaf--back {
+    transform-origin: right center;
+  }
+}
+.nb-face {
+  position: absolute;
+  inset: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.nb-face--back {
+  transform: rotateY(180deg);
+}
+.nb-shade {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(40, 25, 10, 0.4), rgba(40, 25, 10, 0.1) 55%, transparent);
+}
+[data-side='left'] > .nb-shade {
+  background: linear-gradient(270deg, rgba(40, 25, 10, 0.4), rgba(40, 25, 10, 0.1) 55%, transparent);
+}
+
+/* ---------- pages ---------- */
+
+.nb-measure {
+  position: fixed;
+  top: 0;
+  left: -10000px;
+  width: var(--pw);
+  height: var(--ph);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.page {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 2px 8px 8px 2px;
+  background-color: var(--paper);
+  background-image: var(--grain);
+  color: var(--ink);
+  font-size: var(--page-font);
+  line-height: 1.6;
+  box-shadow: inset 24px 0 26px -22px rgba(70, 45, 20, 0.4);
+}
+[data-side='left'] > .page {
+  border-radius: 8px 2px 2px 8px;
+  box-shadow: inset -24px 0 26px -22px rgba(70, 45, 20, 0.4);
+}
+.page:focus {
+  outline: none;
+}
+.page:focus-visible {
+  outline: 2px dashed var(--pen);
+  outline-offset: -8px;
+}
+
+.page-head {
+  flex: none;
+  height: 2.9em;
+  padding: 1.25em 2.3em 0 4.6em;
+  overflow: hidden;
+  color: var(--pencil);
+  font-family: var(--font-type);
+  font-size: 0.72em;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.page-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flow-root;
+  overflow: hidden;
+  padding: 0.5em 1.6em 0.4em 3.4em;
+}
+.page[data-overflow] .page-body {
+  overflow-y: auto;
+}
+
+.page-num {
+  flex: none;
+  height: 2.3em;
+  padding: 0.1em 2.4em 0; /* clear of the dog-eared corner */
+  color: var(--pencil);
+  font-family: var(--font-hand);
+  font-size: 1.15em;
+  text-align: right;
+}
+[data-side='left'] > .page .page-num {
+  text-align: left;
+  padding-left: 3em;
+}
+
+/* blocks on a page */
+.page-body > * + *,
+.chapter > * + * {
+  margin-top: 1.2em;
+}
+.page-body > .is-cont::before {
+  content: '…continued';
+  display: block;
+  /* when the continued block is a grid/flex container, don't take up a cell */
+  grid-column: 1 / -1;
+  flex-basis: 100%;
+  margin-bottom: 0.15em;
+  color: var(--pencil);
+  font-family: var(--font-hand);
+  font-size: 1.1em;
+  line-height: 1.2;
+}
+
+/* paper kinds */
+.page--ruled {
+  background-image:
+    linear-gradient(var(--margin-line), var(--margin-line)),
+    var(--grain);
+  background-repeat: no-repeat, repeat;
+  background-size:
+    1.5px 100%,
+    auto;
+  background-position:
+    2.55em 0,
+    0 0;
+}
+.page--ruled .page-body {
+  background-image: repeating-linear-gradient(to bottom, transparent 0 calc(1.6em - 1px), var(--rule) calc(1.6em - 1px) 1.6em);
+  background-position: 0 0.5em;
+  background-attachment: local;
+}
+.page--grid .page-body {
+  background-image:
+    linear-gradient(var(--rule) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+  background-size: 1.2em 1.2em;
+  background-attachment: local;
+}
+.page--title {
+  background-image:
+    radial-gradient(ellipse 90% 60% at 30% 110%, color-mix(in srgb, var(--tab) 30%, transparent), transparent 70%),
+    var(--grain);
+}
+.page--title .page-head,
+.page--cover .page-head,
+.page--cover .page-num {
+  visibility: hidden;
+}
+.page--cover {
+  border-radius: 3px 10px 10px 3px;
+  background-color: var(--board);
+  background-image:
+    var(--grain),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.08) 0 1px, transparent 1px 3px);
+  box-shadow:
+    inset 10px 0 14px -10px rgba(0, 0, 0, 0.6),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+.page--cover .page-body {
+  padding: 1em 2em 1em 2.6em;
+}
+.page--blank,
+.page--filler {
+  background-image: var(--grain);
+}
+
+/* ---------- title pages ---------- */
+
+.title-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.9em;
+  min-height: 100%;
+  padding: 1em 0 2em;
+}
+.title-scrap {
+  position: relative;
+  margin-left: -0.3em;
+  rotate: -2.5deg;
+  filter: drop-shadow(0 2px 2px rgba(60, 40, 20, 0.22)) drop-shadow(0 6px 8px rgba(60, 40, 20, 0.14));
+}
+.chapter-title {
+  padding: 0.2em 0.5em 0.25em;
+  background-color: var(--tab);
+  background-image: var(--grain);
+  font-family: var(--font-hand);
+  font-size: min(4.2em, calc(var(--pw) * 0.125));
+  font-weight: 700;
+  line-height: 0.95;
+}
+.chapter-note {
+  margin: 0 0 0 1.2em;
+  color: var(--ink-soft);
+  font-family: var(--font-hand);
+  font-size: 1.7em;
+  line-height: 1.15;
+  rotate: 1deg;
+}
+.title-doodle {
+  position: absolute;
+  right: 0.5em;
+  bottom: 1.2em;
+  width: 4em;
+  height: 4em;
+  rotate: 12deg;
+  opacity: 0.8;
+}
+
+/* ---------- filler pages ---------- */
+
+.filler {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.6em;
+  height: 100%;
+  color: var(--pencil);
+  text-align: center;
+}
+.filler .doodle {
+  width: 7em;
+  height: 7em;
+}
+.filler-ring {
+  color: rgba(120, 72, 30, 0.45);
+  rotate: -20deg;
+}
+.filler-squiggle {
+  width: 5em !important;
+  height: 2.5em !important;
+  color: var(--pen);
+}
+.filler-note {
+  font-family: var(--font-hand);
+  font-size: 1.5em;
+  rotate: -3deg;
+}
+
+/* ---------- desk furniture ---------- */
+
+.nb-hint {
+  margin: 0;
+  justify-self: start;
+  padding-left: 8px;
+  color: var(--desk-ink);
+  font-family: var(--font-hand);
+  font-size: 1.25rem;
+  opacity: 0.85;
+  rotate: -1deg;
+}
+.nb-hint--wide {
+  display: none;
+}
+@media (min-width: 960px) and (min-height: 560px) {
+  .nb-hint {
+    justify-self: center;
+  }
+  .nb-hint--wide {
+    display: inline;
+  }
+  .nb-hint--narrow {
+    display: none;
+  }
+}
+
+/* ---------- without JS: loose sheets taped down, one per chapter ---------- */
+
+.nb-source {
+  display: grid;
+  gap: 48px;
+  width: min(100%, 760px);
+  padding: 24px 0 48px;
+}
+.nb-source > * {
+  position: relative;
+  padding: 28px 24px 32px;
+  border-radius: 4px;
+  background-color: var(--paper);
+  background-image: var(--grain);
+  box-shadow: var(--book-shadow);
+}
+.nb-source > .cover {
+  min-height: 420px;
+  background-color: var(--board);
+}
+.nb-source .title-page {
+  min-height: 0;
+  padding: 0 0 1em;
+}

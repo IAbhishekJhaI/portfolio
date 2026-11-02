@@ -1,0 +1,21 @@
+# Coursera (or other) certificates. url = the verify link. hidden: true keeps one off the site.
+- title: Web Application Technologies and Django
+  issuer: University of Michigan
+  date: Jun 2025
+  url: https://coursera.org/verify/DHOVVWUT9BSI
+  order: 3
+# The Rice certs stay hidden until the concurrency modules are done and you can
+# defend them in an interview ("explain fork/join", "what does volatile do?").
+# Flip hidden to false when you're ready.
+- title: Parallel Programming in Java
+  issuer: Rice University
+  date: Oct 2025
+  url: https://coursera.org/verify/VMWN4N4I15XQ
+  hidden: true
+  order: 1
+- title: Concurrent Programming in Java
+  issuer: Rice University
+  date: Oct 2025
+  url: https://coursera.org/verify/JE2MLVRIFUPL
+  hidden: true
+  order: 2

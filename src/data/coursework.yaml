@@ -1,0 +1,25 @@
+# Relevant coursework (B.Tech, KIIT). group: CS core | Systems | Math | Electronics | AI / ML
+- name: Data Structures
+  group: CS core
+- name: Design & Analysis of Algorithms
+  group: CS core
+- name: Database Management Systems
+  group: CS core
+- name: Operating Systems
+  group: Systems
+- name: Distributed Operating Systems
+  group: Systems
+- name: Computer Networks
+  group: Systems
+- name: Cloud Computing
+  group: Systems
+- name: ML for Language Processing
+  group: AI / ML
+- name: Probability & Statistics
+  group: Math
+- name: Differential Equations & Linear Algebra
+  group: Math
+- name: Microprocessors & Embedded Systems
+  group: Electronics
+- name: Signals & Systems
+  group: Electronics

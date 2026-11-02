@@ -1,0 +1,53 @@
+---
+// The book itself. Children (a [data-cover] element plus <Chapter>s) are the source content:
+// with JS they're paginated into the book, without it they simply stack as taped sheets.
+import '../../styles/notebook.css';
+import Doodle from './Doodle.astro';
+
+const rings = Array.from({ length: 17 });
+---
+
+<div class="notebook" data-notebook>
+  <div class="nb-book" data-book data-closed>
+    <nav class="nb-tabs" data-tabs aria-label="Chapters"></nav>
+    <div class="nb-spread" data-spread>
+      <div class="nb-slot nb-slot--left" data-slot="left" data-side="left"></div>
+      <div class="nb-slot nb-slot--right" data-slot="right" data-side="right"></div>
+    </div>
+    <div class="nb-rings" aria-hidden="true">{rings.map(() => <span />)}</div>
+    <button class="nb-corner nb-corner--prev" type="button" data-prev aria-label="Previous page"></button>
+    <button class="nb-corner nb-corner--next" type="button" data-next aria-label="Next page"></button>
+  </div>
+
+  <p class="nb-hint" aria-hidden="true">
+    <span class="nb-hint--wide">click a page, pick a tab, or use ← → to turn</span>
+    <span class="nb-hint--narrow">tap the page edge or swipe to turn</span>
+  </p>
+
+  <div class="nb-measure" data-measure aria-hidden="true"></div>
+  <p class="sr-only" aria-live="polite" data-live></p>
+
+  <template data-filler>
+    <div class="filler">
+      <Doodle name="coffee" class="filler-ring" />
+      <p class="filler-note">(coffee break)</p>
+    </div>
+    <div class="filler">
+      <Doodle name="spiral" class="filler-spiral" />
+      <p class="filler-note">this page left intentionally doodled</p>
+    </div>
+    <div class="filler">
+      <Doodle name="flower" class="filler-flower" />
+      <Doodle name="squiggle" class="filler-squiggle" />
+      <p class="filler-note">notes to self: ship it</p>
+    </div>
+  </template>
+
+  <div class="nb-source" data-source>
+    <slot />
+  </div>
+</div>
+
+<script>
+  import '../../scripts/notebook';
+</script>

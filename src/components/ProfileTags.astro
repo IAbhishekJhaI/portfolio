@@ -1,0 +1,30 @@
+---
+import { profileLinks } from '../data/profile';
+---
+
+<ul class="profile-tags" aria-label="Profiles">
+  {
+    profileLinks.map((l, i) => (
+      <li>
+        <span class="cut-wrap" style={`--r: ${i % 2 ? 2 : -2}deg`}>
+          <a class="luggage" href={l.url} rel="me noopener">
+            <span class="type">{l.label}</span> {l.handle}
+          </a>
+        </span>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .profile-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.7em 1em;
+    list-style: none;
+    padding: 0.2em 0;
+  }
+  .profile-tags li {
+    margin: 0;
+  }
+</style>

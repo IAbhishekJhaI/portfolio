@@ -1,0 +1,64 @@
+---
+import Base from '../layouts/Base.astro';
+import Doodle from '../components/notebook/Doodle.astro';
+---
+
+<Base title="Not found" description="This page doesn't exist.">
+  <div class="lost">
+    <div class="cut-wrap sheet-wrap">
+      <span class="tape tape--top" aria-hidden="true"></span>
+      <section class="sheet torn">
+        <span class="date-stamp">404 · not found</span>
+        <h1>This page fell out of the notebook.</h1>
+        <p>Nothing lives at this address. Head <a href="/">back to the notebook</a> or flip straight to the <a href="/#projects">projects</a>.</p>
+        <Doodle name="squiggle" class="lost-doodle" />
+      </section>
+    </div>
+  </div>
+</Base>
+
+<style>
+  .lost {
+    display: grid;
+    place-items: center;
+    min-height: 100svh;
+    padding: 24px 16px;
+  }
+  .sheet-wrap {
+    --r: -1.5deg;
+    width: min(100%, 520px);
+  }
+  .sheet {
+    position: relative;
+    padding: 2.4em 2em 2.6em 3.2em;
+    background-color: var(--paper);
+    background-image:
+      linear-gradient(var(--margin-line), var(--margin-line)),
+      repeating-linear-gradient(transparent 0 calc(1.6em - 1px), var(--rule) calc(1.6em - 1px) 1.6em),
+      var(--grain);
+    background-repeat: no-repeat, repeat, repeat;
+    background-size:
+      1.5px 100%,
+      auto,
+      auto;
+    background-position:
+      2.4em 0,
+      0 0,
+      0 0;
+  }
+  h1 {
+    margin: 0.5em 0 0.4em;
+    font-family: var(--font-hand);
+    font-size: 2.6em;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .lost-doodle {
+    position: absolute;
+    right: 1.2em;
+    bottom: 0.8em;
+    width: 4em;
+    height: 2em;
+    color: var(--pen);
+  }
+</style>

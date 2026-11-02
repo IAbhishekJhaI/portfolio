@@ -1,0 +1,451 @@
+:root {
+  /* the desk the notebook sits on */
+  --desk: #b4865a;
+  --desk-deep: #8a5f3b;
+  --desk-ink: #3a2717;
+  --lamp: rgba(255, 244, 220, 0.18);
+  --board: #2f3b5c;
+
+  /* paper and ink */
+  --paper: #fdf8ec;
+  --paper-shade: #f0e6d0;
+  --paper-edge: #d9cbab;
+  --card: #fffdf6;
+  --kraft: #d2b384;
+  --ink: #26252d;
+  --ink-soft: #55505c;
+  --pencil: #8b8479;
+  --pen: #2445a3;
+  --rule: rgba(70, 120, 200, 0.2);
+  --margin-line: rgba(214, 72, 72, 0.42);
+  --highlight: rgba(255, 228, 80, 0.7);
+  --stamp: #c0392b;
+
+  /* scrapbook bits */
+  --tape-pink: rgba(246, 160, 176, 0.8);
+  --tape-blue: rgba(130, 190, 232, 0.78);
+  --tape-yellow: rgba(248, 214, 100, 0.82);
+  --tape-green: rgba(146, 208, 160, 0.8);
+  --sticky-yellow: #fde68a;
+  --sticky-pink: #fbc8da;
+  --sticky-blue: #c6e6fb;
+  --sticky-green: #d3f0c4;
+
+  --shadow: 0 1px 1px rgba(60, 40, 20, 0.14), 0 4px 10px rgba(60, 40, 20, 0.14);
+  --shadow-lift: 0 2px 3px rgba(60, 40, 20, 0.16), 0 12px 22px rgba(60, 40, 20, 0.2);
+  --book-shadow: 0 30px 60px rgba(40, 24, 10, 0.38), 0 8px 18px rgba(40, 24, 10, 0.28);
+
+  --font-hand: 'Caveat', 'Segoe Print', 'Bradley Hand', cursive;
+  --font-type: 'Special Elite', 'Courier New', monospace;
+  --font-body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, 'Cascadia Code', Consolas, monospace;
+
+  /* textures, all generated: paper grain, wood grain, rubber-stamp speckle */
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.25 0 0 0 0 0.12 0 0 0 0.16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+  --wood: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.004 0.09' numOctaves='4' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.18 0 0 0 0 0.09 0 0 0 0 0.03 0.9 0 0 0 -0.32'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E");
+  --grunge: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='s'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.6 0 0 0 2.15'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23s)'/%3E%3C/svg%3E");
+
+  color-scheme: light;
+}
+
+/* Night desk: the paper stays paper, the room goes dark and a lamp lights the book. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --desk: #2b1f17;
+    --desk-deep: #140d08;
+    --desk-ink: #e8d9c0;
+    --lamp: rgba(255, 190, 110, 0.2);
+    --board: #1f2840;
+    --paper: #efe5ce;
+    --paper-shade: #ddd0b3;
+    --paper-edge: #b9a984;
+    --card: #f6eedc;
+    --kraft: #bf9f70;
+    --shadow: 0 1px 1px rgba(0, 0, 0, 0.25), 0 4px 10px rgba(0, 0, 0, 0.22);
+    --shadow-lift: 0 2px 3px rgba(0, 0, 0, 0.28), 0 12px 22px rgba(0, 0, 0, 0.3);
+    --book-shadow: 0 30px 70px rgba(0, 0, 0, 0.6), 0 8px 18px rgba(0, 0, 0, 0.45);
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --desk: #2b1f17;
+  --desk-deep: #140d08;
+  --desk-ink: #e8d9c0;
+  --lamp: rgba(255, 190, 110, 0.2);
+  --board: #1f2840;
+  --paper: #efe5ce;
+  --paper-shade: #ddd0b3;
+  --paper-edge: #b9a984;
+  --card: #f6eedc;
+  --kraft: #bf9f70;
+  --shadow: 0 1px 1px rgba(0, 0, 0, 0.25), 0 4px 10px rgba(0, 0, 0, 0.22);
+  --shadow-lift: 0 2px 3px rgba(0, 0, 0, 0.28), 0 12px 22px rgba(0, 0, 0, 0.3);
+  --book-shadow: 0 30px 70px rgba(0, 0, 0, 0.6), 0 8px 18px rgba(0, 0, 0, 0.45);
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  overflow-x: hidden;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
+  background-color: var(--desk);
+  background-image:
+    radial-gradient(ellipse 70% 60% at 50% 45%, var(--lamp), transparent 70%),
+    var(--wood),
+    linear-gradient(180deg, var(--desk), var(--desk-deep));
+  background-attachment: fixed;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 0;
+}
+
+p {
+  margin: 0 0 0.75em;
+}
+
+p:last-child {
+  margin-bottom: 0;
+}
+
+a {
+  color: var(--pen);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  text-decoration-style: wavy;
+}
+
+:focus-visible {
+  outline: 2px dashed var(--pen);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+/* bold reads as a highlighter stroke */
+strong {
+  font-weight: 600;
+  padding: 0 0.1em;
+  background-image: linear-gradient(transparent 55%, var(--highlight) 55%, var(--highlight) 92%, transparent 92%);
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  padding: 0.05em 0.3em;
+  border-radius: 3px;
+  background: rgba(60, 40, 20, 0.07);
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+ul,
+ol {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+li + li {
+  margin-top: 0.3em;
+}
+
+li::marker {
+  color: var(--pencil);
+}
+
+.hand {
+  font-family: var(--font-hand);
+}
+
+.type {
+  font-family: var(--font-type);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* ---------- scrapbook pieces ---------- */
+
+/* washi tape: translucent, striped, torn at both ends */
+.tape {
+  position: absolute;
+  z-index: 2;
+  width: var(--tw, 5.5em);
+  height: 1.5em;
+  background-color: var(--tape-c, var(--tape-yellow));
+  background-image: repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.28) 0 0.3em, transparent 0.3em 0.6em);
+  clip-path: polygon(2% 0, 6% 12%, 3% 26%, 7% 42%, 2% 58%, 6% 74%, 3% 90%, 5% 100%, 95% 100%, 98% 86%, 94% 70%, 99% 54%, 95% 38%, 98% 22%, 94% 8%, 97% 0);
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.tape--top {
+  top: -0.75em;
+  left: 50%;
+  translate: -50% 0;
+  rotate: -3deg;
+}
+.tape--tl {
+  top: -0.45em;
+  left: -1.5em;
+  rotate: -38deg;
+}
+.tape--tr {
+  top: -0.45em;
+  right: -1.5em;
+  rotate: 36deg;
+}
+.tape--pink {
+  --tape-c: var(--tape-pink);
+}
+.tape--blue {
+  --tape-c: var(--tape-blue);
+}
+.tape--green {
+  --tape-c: var(--tape-green);
+}
+
+/* Wrapper for anything with a cut-out shape (clip-path/mask): it carries the
+   shadow and the focus ring, which the shape itself would clip away. */
+.cut-wrap {
+  display: inline-block;
+  position: relative;
+  rotate: var(--r, 0deg);
+  filter: drop-shadow(0 1px 1px rgba(60, 40, 20, 0.2)) drop-shadow(0 4px 5px rgba(60, 40, 20, 0.16));
+}
+.cut-wrap:focus-within {
+  outline: 2px dashed var(--pen);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+.cut-wrap :focus-visible {
+  outline: none;
+}
+
+/* a piece of white card glued in */
+.cutout {
+  position: relative;
+  background-color: var(--card);
+  background-image: var(--grain);
+  box-shadow: var(--shadow);
+  rotate: var(--r, -0.8deg);
+}
+
+.sticky {
+  position: relative;
+  padding: 0.9em 1em 1.1em;
+  background-color: var(--sticky-c, var(--sticky-yellow));
+  background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.05), transparent 1.6em), var(--grain);
+  box-shadow: 0 1px 1px rgba(60, 40, 20, 0.12), 0 10px 12px -8px rgba(60, 40, 20, 0.45);
+  rotate: var(--r, 1.2deg);
+}
+
+/* round die-cut sticker */
+.sticker {
+  display: inline-grid;
+  place-items: center;
+  width: 5.2em;
+  aspect-ratio: 1;
+  padding: 0.5em;
+  border-radius: 50%;
+  background-color: var(--st, var(--sticky-yellow));
+  background-image: var(--grain);
+  color: var(--ink);
+  font-family: var(--font-hand);
+  font-weight: 700;
+  font-size: 1.1em;
+  line-height: 1;
+  text-align: center;
+  box-shadow: 0 0 0 0.25em #fff, 0 0.3em 0.6em 0.2em rgba(60, 40, 20, 0.25);
+  rotate: var(--r, 8deg);
+}
+
+/* label-maker strip */
+.label {
+  display: inline-block;
+  padding: 0.28em 0.7em 0.22em;
+  border-radius: 3px;
+  background: var(--label-bg, #24222b);
+  color: #f6f2e9;
+  font-family: var(--font-type);
+  font-size: 0.72em;
+  letter-spacing: 0.2em;
+  line-height: 1.3;
+  text-transform: uppercase;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* rubber date stamp */
+.date-stamp {
+  display: inline-block;
+  padding: 0.12em 0.5em 0.05em;
+  border: 2px solid currentColor;
+  border-radius: 4px;
+  color: var(--stamp);
+  font-family: var(--font-type);
+  font-size: 0.72em;
+  letter-spacing: 0.12em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  white-space: nowrap;
+  rotate: var(--r, -3deg);
+  opacity: 0.88;
+  -webkit-mask: var(--grunge);
+  mask: var(--grunge);
+}
+
+/* admit-one ticket with notched sides (wrap it in .cut-wrap) */
+.ticket {
+  --notch: 7px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8em;
+  padding: 0.6em 1.3em 0.55em;
+  background-color: var(--tk, var(--sticky-yellow));
+  background-image: var(--grain);
+  color: var(--ink);
+  font-family: var(--font-type);
+  font-size: 0.9em;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  -webkit-mask:
+    radial-gradient(circle at 0 50%, #0000 var(--notch), #000 calc(var(--notch) + 0.5px)) 0 0 / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 50%, #0000 var(--notch), #000 calc(var(--notch) + 0.5px)) 100% 0 / 51% 100% no-repeat;
+  mask:
+    radial-gradient(circle at 0 50%, #0000 var(--notch), #000 calc(var(--notch) + 0.5px)) 0 0 / 51% 100% no-repeat,
+    radial-gradient(circle at 100% 50%, #0000 var(--notch), #000 calc(var(--notch) + 0.5px)) 100% 0 / 51% 100% no-repeat;
+}
+.ticket:hover {
+  text-decoration: none;
+  filter: brightness(1.04);
+}
+.ticket-stub {
+  padding-left: 0.8em;
+  border-left: 2px dashed rgba(0, 0, 0, 0.28);
+  font-family: var(--font-hand);
+  font-size: 1.3em;
+  line-height: 1;
+  text-transform: none;
+}
+.ticket--blue {
+  --tk: var(--sticky-blue);
+}
+.ticket--pink {
+  --tk: var(--sticky-pink);
+}
+
+/* luggage tag (wrap it in .cut-wrap) */
+.luggage {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45em;
+  padding: 0.4em 0.9em 0.4em 1.75em;
+  background-color: var(--kraft);
+  background-image: var(--grain);
+  color: var(--ink);
+  font-size: 0.92em;
+  text-decoration: none;
+  clip-path: polygon(0.9em 0, 100% 0, 100% 100%, 0.9em 100%, 0 50%);
+}
+.luggage::before {
+  content: '';
+  position: absolute;
+  left: 0.75em;
+  top: 50%;
+  width: 0.45em;
+  height: 0.45em;
+  margin-top: -0.225em;
+  border-radius: 50%;
+  background: var(--paper);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.45);
+}
+.luggage .type {
+  font-size: 0.78em;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* tech stack as little stickers */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em 0.55em;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.tags li {
+  margin: 0;
+  padding: 0.12em 0.55em;
+  border-radius: 4px;
+  background: var(--sticky-blue);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.72em;
+  box-shadow: 0 0 0 2px #fff, 0 1px 3px 2px rgba(60, 40, 20, 0.2);
+  rotate: -1.5deg;
+}
+.tags li:nth-child(4n + 2) {
+  background: var(--sticky-pink);
+  rotate: 1.2deg;
+}
+.tags li:nth-child(4n + 3) {
+  background: var(--sticky-yellow);
+  rotate: -0.6deg;
+}
+.tags li:nth-child(4n + 4) {
+  background: var(--sticky-green);
+  rotate: 1.8deg;
+}
+
+/* ragged top and bottom edges, like paper torn from a pad */
+.torn {
+  clip-path: polygon(0 4px, 5% 0, 11% 3px, 18% 0, 25% 4px, 31% 1px, 38% 4px, 45% 0, 52% 3px, 59% 0, 66% 4px, 73% 1px, 80% 4px, 87% 0, 94% 3px, 100% 1px, 100% calc(100% - 3px), 95% 100%, 89% calc(100% - 4px), 82% calc(100% - 1px), 76% calc(100% - 5px), 69% 100%, 62% calc(100% - 4px), 55% calc(100% - 1px), 48% calc(100% - 5px), 41% 100%, 34% calc(100% - 3px), 27% calc(100% - 1px), 20% calc(100% - 5px), 13% 100%, 6% calc(100% - 4px), 0 calc(100% - 1px));
+}
+
+.doodle {
+  width: 3em;
+  height: 3em;
+  color: var(--pencil);
+  pointer-events: none;
+}

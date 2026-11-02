@@ -1,0 +1,8 @@
+# Articles you wrote (kind: written) or recommend (kind: recommended).
+# - title: How Postgres row-level security actually works
+#   url: https://...
+#   kind: recommended     # written | recommended
+#   source: Blog name     # optional
+#   date: 2026-10         # optional
+#   note: One line on why it's good.   # optional
+[]

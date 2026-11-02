@@ -1,0 +1,24 @@
+---
+// Old standalone pages now live inside the notebook; send visitors to the right page of it.
+interface Props {
+  to: string;
+}
+
+const { to } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="robots" content="noindex" />
+    <meta http-equiv="refresh" content={`0; url=${to}`} />
+    <title>Opening the notebook…</title>
+    <script is:inline define:vars={{ to }}>
+      location.replace(to);
+    </script>
+  </head>
+  <body>
+    <a href={to}>Open the notebook</a>
+  </body>
+</html>

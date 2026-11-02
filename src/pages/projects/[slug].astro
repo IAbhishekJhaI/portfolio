@@ -1,0 +1,13 @@
+---
+import { getCollection } from 'astro:content';
+import Redirect from '../../components/Redirect.astro';
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects', (p) => !p.data.draft);
+  return projects.map((project) => ({ params: { slug: project.id } }));
+}
+
+const { slug } = Astro.params;
+---
+
+<Redirect to={`/#projects/${slug}`} />

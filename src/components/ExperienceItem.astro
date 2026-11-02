@@ -1,0 +1,94 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+
+interface Props {
+  entry: CollectionEntry<'experience'>;
+  compact?: boolean;
+}
+
+const { entry, compact = false } = Astro.props;
+const { org, role, period, location, url } = entry.data;
+const { Content } = await render(entry);
+---
+
+<article class:list={['exp', { compact }]} data-split>
+  <header>
+    <h3 class="org">{url ? <a href={url}>{org}</a> : org}</h3>
+    <p class="period"><span class="date-stamp">{period}</span></p>
+    <p class="role">
+      {role}{location && <span class="loc"> · {location}</span>}
+    </p>
+  </header>
+  <div class="body" data-split><Content /></div>
+</article>
+
+<style>
+  header {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: start;
+    gap: 0.35em 0.8em;
+    margin-bottom: 0.55em;
+  }
+  .org {
+    justify-self: start;
+    padding: 0.06em 0.45em 0;
+    background-color: var(--tab, var(--sticky-yellow));
+    background-image: var(--grain);
+    font-family: var(--font-hand);
+    font-size: 1.85em;
+    font-weight: 700;
+    line-height: 1.1;
+    box-shadow: var(--shadow);
+    rotate: -1.5deg;
+  }
+  .exp:nth-of-type(even) .org {
+    rotate: 1deg;
+  }
+  .org a {
+    color: inherit;
+    text-decoration: none;
+  }
+  .org a:hover {
+    text-decoration: underline wavy;
+  }
+  .period {
+    margin: 0.35em 0 0;
+  }
+  .role {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: var(--pen);
+    font-family: var(--font-hand);
+    font-size: 1.35em;
+    line-height: 1.15;
+  }
+  .loc {
+    color: var(--pencil);
+    font-family: var(--font-type);
+    font-size: 0.55em;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .body {
+    font-size: 0.95em;
+  }
+  .compact .org {
+    font-size: 1.45em;
+  }
+  .compact .role {
+    font-size: 1.2em;
+  }
+  .compact .body {
+    color: var(--ink-soft);
+    font-size: 0.9em;
+  }
+  .compact .body :global(strong) {
+    color: var(--ink);
+  }
+  @media (max-width: 420px) {
+    header {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

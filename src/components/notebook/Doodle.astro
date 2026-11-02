@@ -1,0 +1,41 @@
+---
+// Hand-drawn margin doodles. Purely decorative, so they're hidden from screen readers.
+import type { HTMLAttributes } from 'astro/types';
+
+const paths = {
+  star: ['M24 5 L29.5 18 L43 18.8 L32.4 27.4 L36.2 41 L24 33.4 L11.6 41.2 L15.8 27.2 L5 18.4 L18.8 17.6 Z'],
+  arrow: ['M5 31 C 13 13, 29 9, 41 21', 'M33.5 20.5 L41.5 22.5 L39 14.5'],
+  squiggle: ['M3 25 c4-9 8-9 11 0 s8 9 11 0 s8-9 11 0 s7 9 9 1'],
+  heart: ['M24 40 C 8 28, 5 16, 13.5 11 C 19 8, 23 12, 24 16.5 C 25 12, 29 8, 34.5 11 C 43 16, 40 28, 24 40 Z'],
+  spark: ['M24 5 v11', 'M24 32 v11', 'M5 24 h11', 'M32 24 h11', 'M12 12 l6 6', 'M30 30 l6 6', 'M36 12 l-6 6', 'M18 30 l-6 6'],
+  coffee: ['M24 6.5 a17.5 17.5 0 1 1 -0.1 0', 'M9 31 a16 16 0 0 0 29 5'],
+  spiral: ['M24 24 m-2 0 a2 2 0 1 1 4 0 a5 5 0 1 1 -9 -1 a9 9 0 1 1 15 6 a13 13 0 1 1 -22 -9 a17 17 0 1 1 28 -6'],
+  flower: [
+    'M24 21 a3 3 0 1 0 0.1 0',
+    'M24 18 c-5-10 5-10 0 0',
+    'M30 24 c10-5 10 5 0 0',
+    'M24 30 c5 10-5 10 0 0',
+    'M18 24 c-10 5-10-5 0 0',
+  ],
+} as const;
+
+interface Props extends HTMLAttributes<'svg'> {
+  name: keyof typeof paths;
+}
+
+const { name, class: className, ...rest } = Astro.props;
+---
+
+<svg
+  class:list={['doodle', `doodle--${name}`, className]}
+  viewBox="0 0 48 48"
+  fill="none"
+  stroke="currentColor"
+  stroke-width={name === 'coffee' ? 3 : 2}
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  aria-hidden="true"
+  {...rest}
+>
+  {paths[name].map((d) => <path d={d} />)}
+</svg>

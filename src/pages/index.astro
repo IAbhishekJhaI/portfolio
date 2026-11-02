@@ -1,0 +1,943 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Notebook from '../components/notebook/Notebook.astro';
+import Chapter from '../components/notebook/Chapter.astro';
+import Doodle from '../components/notebook/Doodle.astro';
+import ExperienceItem from '../components/ExperienceItem.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import ProfileTags from '../components/ProfileTags.astro';
+import { profile, profileLinks } from '../data/profile';
+import { hasResume } from '../lib/site';
+
+const byOrder = (a: { data: { order: number } }, b: { data: { order: number } }) => a.data.order - b.data.order;
+
+const experience = (await getCollection('experience', (e) => !e.data.draft)).sort(byOrder);
+const techExp = experience.filter((e) => e.data.track === 'tech');
+const otherExp = experience.filter((e) => e.data.track === 'other');
+const now = techExp[0];
+
+const projects = (await getCollection('projects', (p) => !p.data.draft)).sort(byOrder);
+const certs = (await getCollection('certifications', (c) => !c.data.hidden)).sort(byOrder);
+
+const courseGroups = ['CS core', 'Systems', 'AI / ML', 'Math', 'Electronics'] as const;
+const courses = await getCollection('coursework');
+const courseLists = courseGroups
+  .map((g) => ({ g, list: courses.filter((c) => c.data.group === g) }))
+  .filter(({ list }) => list.length > 0);
+
+const [books, articles, playlists] = await Promise.all([
+  getCollection('books'),
+  getCollection('articles'),
+  getCollection('playlists'),
+]);
+const shelf = [
+  ...books.filter((b) => b.data.status === 'reading'),
+  ...books.filter((b) => b.data.status === 'read').sort((a, b) => (b.data.year ?? 0) - (a.data.year ?? 0)),
+];
+const clippings = [...articles.filter((a) => a.data.kind === 'written'), ...articles.filter((a) => a.data.kind === 'recommended')];
+
+const tab = {
+  hello: '#f4a7b4',
+  experience: '#f6c96f',
+  projects: '#9fd3a7',
+  skills: '#9ccaf0',
+  coursework: '#c6b2ec',
+  certifications: '#f2b48a',
+  library: '#b5e0d8',
+  contact: '#f3a6cf',
+};
+
+const year = new Date().getFullYear();
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Person',
+  name: profile.name,
+  jobTitle: 'Software Engineer',
+  description: profile.headline,
+  email: `mailto:${profile.email}`,
+  url: Astro.site?.href,
+  address: { '@type': 'PostalAddress', addressLocality: profile.location },
+  sameAs: profileLinks.map((l) => l.url),
+  knowsAbout: profile.skills.flatMap((s) => s.items),
+};
+---
+
+<Base jsonLd={jsonLd}>
+  <Notebook>
+    <div class="cover" data-cover>
+      <div class="cover-label">
+        <span class="tape tape--top tape--pink" aria-hidden="true"></span>
+        <p class="cover-kicker">Portfolio · field notes</p>
+        <h1 class="cover-name">{profile.name}</h1>
+        <p class="cover-sub">{profile.headline}</p>
+      </div>
+      <span class="sticker cover-hi" style="--st: var(--sticky-yellow); --r: 12deg">hi!</span>
+      <span class="label cover-vol">Vol. {year}</span>
+      <p class="cover-open" aria-hidden="true">open me <Doodle name="arrow" /></p>
+    </div>
+
+    <Chapter id="hello" tab="Hello" color={tab.hello} heading={false} doodle="spark">
+      <Fragment slot="title">
+        <h2 class="ransom" aria-label={profile.name}>
+          {
+            profile.name.split(' ').map((word) => (
+              <span class="ransom-word" aria-hidden="true">
+                {[...word].map((ch) => (
+                  <span>{ch}</span>
+                ))}
+              </span>
+            ))
+          }
+        </h2>
+        <p class="strip">
+          <span class="tape tape--tr tape--green" aria-hidden="true"></span>
+          {profile.headline}
+        </p>
+        <p class="round-stamp">{profile.location}</p>
+      </Fragment>
+
+      <div class="hello">
+        <p class="hello-hi">Hi, thanks for stopping by!</p>
+        <p>{profile.intro}</p>
+      </div>
+      {
+        now && (
+          <div class="sticky now" data-keep style="--sticky-c: var(--sticky-pink); --r: -2deg">
+            <p class="now-h">right now</p>
+            <p>
+              {now.data.role} @ {now.data.org}
+            </p>
+          </div>
+        )
+      }
+      <div class="actions">
+        <span class="cut-wrap" style="--r: -1.5deg">
+          <a class="ticket" href={`mailto:${profile.email}`}>Email me<span class="ticket-stub" aria-hidden="true">✉</span></a>
+        </span>
+        {
+          hasResume && (
+            <span class="cut-wrap" style="--r: 2deg">
+              <a class="ticket ticket--blue" href={profile.resumePath}>
+                Resume (PDF)<span class="ticket-stub" aria-hidden="true">↓</span>
+              </a>
+            </span>
+          )
+        }
+      </div>
+      <ProfileTags />
+      <div class="cutout howto" data-keep style="--r: 0.8deg">
+        <span class="tape tape--tl" aria-hidden="true"></span>
+        <p class="howto-h">how to read this notebook</p>
+        <ul>
+          <li>the coloured tabs jump to a chapter</li>
+          <li>click a page, its folded corner, or press ← → to turn it</li>
+          <li>on a phone, tap the page edge or swipe</li>
+        </ul>
+      </div>
+    </Chapter>
+
+    <Chapter id="experience" tab="Experience" color={tab.experience} note="where I've worked" doodle="arrow">
+      {techExp.map((e) => <ExperienceItem entry={e} />)}
+      {otherExp.length > 0 && <h3 class="also">Also…</h3>}
+      {otherExp.map((e) => <ExperienceItem entry={e} compact />)}
+    </Chapter>
+
+    <Chapter id="projects" tab="Projects" color={tab.projects} note="things I've built: pick one" doodle="spiral">
+      <Fragment slot="title">
+        <div class="cutout toc" style="--r: 0.6deg">
+          <span class="tape tape--tr tape--yellow" aria-hidden="true"></span>
+          <ol>
+            {
+              projects.map((p) => (
+                <li>
+                  <a href={`#projects/${p.id}`}>
+                    <span class="toc-title">{p.data.title}</span>
+                    <span class="toc-dots" aria-hidden="true" />
+                    <span class="toc-period">{p.data.period}</span>
+                  </a>
+                </li>
+              ))
+            }
+          </ol>
+        </div>
+      </Fragment>
+      {projects.map((p) => <ProjectCard project={p} />)}
+    </Chapter>
+
+    <Chapter id="skills" tab="Skills" color={tab.skills} note="tools of the trade" doodle="flower">
+      <div class="stickies" data-split>
+        {
+          profile.skills.map((s) => (
+            <div class="sticky" data-keep>
+              <h3>{s.group}</h3>
+              <ul>
+                {s.items.map((i) => (
+                  <li>{i}</li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </div>
+    </Chapter>
+
+    {
+      courseLists.length > 0 && (
+        <Chapter id="coursework" tab="Courses" title="Coursework" color={tab.coursework} paper="grid" note="the classes that stuck" doodle="squiggle">
+          <div class="checklists" data-split>
+            {courseLists.map(({ g, list }) => (
+              <section class="checklist" data-keep>
+                <h3>{g}</h3>
+                <ul>
+                  {list.map((c) => (
+                    <li>{c.data.name}</li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        </Chapter>
+      )
+    }
+
+    {
+      certs.length > 0 && (
+        <Chapter id="certifications" tab="Certs" title="Certifications" color={tab.certifications} note="stamped & verified" doodle="star">
+          <div class="stamps" data-split>
+            {certs.map((c) => {
+              const Tag = c.data.url ? 'a' : 'div';
+              return (
+                <div class="cut-wrap stamp-wrap" data-keep>
+                  <Tag class="stamp" href={c.data.url} rel={c.data.url ? 'noopener' : undefined}>
+                    <span class="stamp-issuer">{c.data.issuer}</span>
+                    <span class="stamp-title">{c.data.title}</span>
+                    <span class="stamp-foot">
+                      {c.data.platform} · {c.data.date}
+                    </span>
+                    {c.data.url && <span class="stamp-verify">verify ↗</span>}
+                  </Tag>
+                </div>
+              );
+            })}
+          </div>
+        </Chapter>
+      )
+    }
+
+    {
+      books.length + articles.length + playlists.length > 0 && (
+        <Chapter id="library" tab="Library" color={tab.library} note="books, clippings & playlists" doodle="heart">
+          {shelf.length > 0 && <h3 class="shelf-h">Books</h3>}
+          {shelf.length > 0 && (
+            <div class="checkouts" data-split>
+              {shelf.map((b) => (
+                <div class="checkout" data-keep>
+                  <p class="checkout-title">
+                    {b.data.url ? (
+                      <a href={b.data.url} rel="noopener">
+                        {b.data.title}
+                      </a>
+                    ) : (
+                      b.data.title
+                    )}
+                  </p>
+                  <p class="checkout-author">{b.data.author}</p>
+                  <span class="date-stamp checkout-stamp">
+                    {b.data.status === 'reading' ? 'Reading now' : `Read${b.data.year ? ` ${b.data.year}` : ''}`}
+                  </span>
+                  {b.data.note && <p class="checkout-note">{b.data.note}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+          {clippings.length > 0 && <h3 class="shelf-h">Articles</h3>}
+          {clippings.length > 0 && (
+            <div class="clippings" data-split>
+              {clippings.map((a) => (
+                <div class="cut-wrap clipping-wrap" data-keep>
+                  <a class="clipping torn" href={a.data.url} rel="noopener">
+                    <span class="clipping-src">
+                      {[a.data.kind === 'written' ? 'By me' : a.data.source, a.data.date].filter(Boolean).join(' · ')}
+                    </span>
+                    <span class="clipping-title">{a.data.title}</span>
+                    {a.data.note && <span class="clipping-note">{a.data.note}</span>}
+                  </a>
+                </div>
+              ))}
+            </div>
+          )}
+          {playlists.length > 0 && <h3 class="shelf-h">YouTube playlists</h3>}
+          {playlists.length > 0 && (
+            <div class="cassettes" data-split>
+              {playlists.map((p) => (
+                <a class="cassette" href={p.data.url} rel="noopener" data-keep>
+                  <span class="cassette-label">
+                    <span class="cassette-title">{p.data.title}</span>
+                    <span class="cassette-meta">{[p.data.channel, p.data.topic].filter(Boolean).join(' · ')}</span>
+                  </span>
+                  <span class="cassette-reels" aria-hidden="true">
+                    <span />
+                    <span />
+                  </span>
+                  {p.data.note && <span class="cassette-note">{p.data.note}</span>}
+                </a>
+              ))}
+            </div>
+          )}
+        </Chapter>
+      )
+    }
+
+    <Chapter id="contact" tab="Say hi" title="Say hi" color={tab.contact} note="my inbox is open" doodle="heart">
+      <div class="envelope" data-keep>
+        <span class="env-stamp" aria-hidden="true"><Doodle name="heart" /></span>
+        <p class="env-to">To: you · From: {profile.name}</p>
+        <a class="env-mail" href={`mailto:${profile.email}`}>{profile.email}</a>
+      </div>
+      {
+        hasResume && (
+          <p>
+            <span class="cut-wrap" style="--r: -1deg">
+              <a class="ticket ticket--blue" href={profile.resumePath}>
+                Resume (PDF)<span class="ticket-stub" aria-hidden="true">↓</span>
+              </a>
+            </span>
+          </p>
+        )
+      }
+      <ProfileTags />
+      <p class="colophon">
+        thanks for flipping through ♥
+        <span>Built with Astro · {year}</span>
+      </p>
+    </Chapter>
+  </Notebook>
+</Base>
+
+<style>
+  /* ---------- cover ---------- */
+  .cover {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100%;
+    color: #f4eee0;
+    text-align: center;
+  }
+  .cover-label {
+    position: relative;
+    max-width: 88%;
+    padding: 1.5em 1.8em 1.3em;
+    background-color: var(--card);
+    background-image: var(--grain);
+    color: var(--ink);
+    box-shadow:
+      var(--shadow-lift),
+      inset 0 0 0 0.45em var(--card),
+      inset 0 0 0 calc(0.45em + 1.5px) var(--rule);
+    rotate: -1.5deg;
+  }
+  .cover-kicker,
+  .cover-sub {
+    font-family: var(--font-type);
+    font-size: 0.72em;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--pencil);
+  }
+  .cover-sub {
+    margin: 0;
+    font-size: 0.7em;
+    letter-spacing: 0.06em;
+    text-transform: none;
+    color: var(--ink-soft);
+  }
+  .cover-name {
+    margin: 0.1em 0 0.2em;
+    font-family: var(--font-hand);
+    font-size: 3.8em;
+    font-weight: 700;
+    line-height: 0.95;
+  }
+  .cover-hi {
+    position: absolute;
+    top: 9%;
+    right: 8%;
+    font-size: 1.5em;
+  }
+  .cover-vol {
+    position: absolute;
+    bottom: 15%;
+    left: 10%;
+    rotate: -4deg;
+  }
+  .cover-open {
+    position: absolute;
+    right: 8%;
+    bottom: 5%;
+    display: flex;
+    align-items: center;
+    gap: 0.2em;
+    font-family: var(--font-hand);
+    font-size: 1.7em;
+    rotate: -4deg;
+  }
+  .cover-open :global(.doodle) {
+    width: 1.5em;
+    height: 1.5em;
+    color: inherit;
+    rotate: 20deg;
+  }
+
+  /* ---------- hello ---------- */
+  .ransom {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2em 0.5em;
+    margin-bottom: 0.3em;
+    line-height: 1;
+  }
+  .ransom-word {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.08em;
+  }
+  .ransom-word span {
+    display: inline-block;
+    padding: 0.08em 0.14em 0.02em;
+    font-size: clamp(26px, calc(var(--pw, 480px) * 0.078), 44px);
+    font-weight: 400;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  }
+  .ransom-word span:nth-child(6n + 1) {
+    background: #1f1d24;
+    color: #fdf8ec;
+    font-family: var(--font-type);
+    rotate: -4deg;
+  }
+  .ransom-word span:nth-child(6n + 2) {
+    background: #fff;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    rotate: 3deg;
+  }
+  .ransom-word span:nth-child(6n + 3) {
+    background: var(--sticky-yellow);
+    font-family: var(--font-hand);
+    font-weight: 700;
+    rotate: -2deg;
+  }
+  .ransom-word span:nth-child(6n + 4) {
+    background: #c0392b;
+    color: #fff;
+    font-family: 'Arial Black', Impact, sans-serif;
+    font-size: clamp(22px, calc(var(--pw, 480px) * 0.065), 36px);
+    text-transform: uppercase;
+    rotate: 5deg;
+  }
+  .ransom-word span:nth-child(6n + 5) {
+    background: var(--kraft);
+    font-family: var(--font-mono);
+    rotate: -6deg;
+  }
+  .ransom-word span:nth-child(6n + 6) {
+    background: var(--sticky-blue);
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    rotate: 2deg;
+  }
+  .strip {
+    position: relative;
+    max-width: 92%;
+    padding: 0.55em 0.9em;
+    background-color: var(--card);
+    background-image: var(--grain);
+    font-family: var(--font-type);
+    font-size: 0.92em;
+    line-height: 1.45;
+    box-shadow: var(--shadow);
+    rotate: 1.2deg;
+  }
+  .round-stamp {
+    display: grid;
+    place-items: center;
+    align-self: flex-end;
+    width: 10.5em;
+    aspect-ratio: 1;
+    margin: 0.5em 2em 0 0;
+    padding: 0.8em;
+    border: 4px double var(--stamp);
+    border-radius: 50%;
+    color: var(--stamp);
+    font-family: var(--font-type);
+    font-size: 0.72em;
+    letter-spacing: 0.06em;
+    line-height: 1.3;
+    text-align: center;
+    text-transform: uppercase;
+    rotate: -12deg;
+    opacity: 0.85;
+    -webkit-mask: var(--grunge);
+    mask: var(--grunge);
+  }
+  .hello-hi {
+    margin-bottom: 0.2em;
+    color: var(--pen);
+    font-family: var(--font-hand);
+    font-size: 1.8em;
+    line-height: 1.1;
+    rotate: -1deg;
+  }
+  .now {
+    max-width: 17em;
+    margin-left: auto;
+    font-size: 0.95em;
+  }
+  .now-h,
+  .howto-h {
+    margin-bottom: 0.15em;
+    font-family: var(--font-hand);
+    font-size: 1.35em;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8em 1.2em;
+    padding: 0.2em 0;
+  }
+  .howto {
+    padding: 0.9em 1.1em 1em;
+    font-size: 0.92em;
+  }
+
+  /* ---------- experience ---------- */
+  .also {
+    color: var(--pen);
+    font-family: var(--font-hand);
+    font-size: 1.9em;
+    rotate: -1.5deg;
+  }
+
+  /* ---------- projects ---------- */
+  .toc {
+    position: relative;
+    width: 100%;
+    margin: 0.4em 0 0;
+    padding: 1em 1.2em 1.1em;
+  }
+  .toc ol {
+    list-style: none;
+    padding: 0;
+    counter-reset: toc;
+  }
+  .toc li + li {
+    margin-top: 0.45em;
+  }
+  .toc a {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .toc a::before {
+    content: counter(toc) '.';
+    counter-increment: toc;
+    color: var(--pencil);
+    font-family: var(--font-hand);
+    font-size: 1.3em;
+  }
+  .toc-title {
+    font-family: var(--font-hand);
+    font-size: 1.5em;
+    font-weight: 600;
+    line-height: 1.1;
+  }
+  .toc a:hover .toc-title {
+    color: var(--pen);
+    text-decoration: underline wavy;
+  }
+  .toc-dots {
+    flex: 1;
+    min-width: 1em;
+    border-bottom: 2px dotted var(--pencil);
+    opacity: 0.5;
+  }
+  .toc-period {
+    color: var(--ink-soft);
+    font-family: var(--font-type);
+    font-size: 0.72em;
+    white-space: nowrap;
+  }
+
+  /* ---------- skills ---------- */
+  .stickies {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11.5em, 1fr));
+    gap: 1.1em 1.2em;
+    padding: 0.5em 0.3em 0.6em;
+  }
+  .stickies .sticky:nth-child(4n + 1) {
+    --r: -1.8deg;
+  }
+  .stickies .sticky:nth-child(4n + 2) {
+    --sticky-c: var(--sticky-blue);
+    --r: 1.6deg;
+  }
+  .stickies .sticky:nth-child(4n + 3) {
+    --sticky-c: var(--sticky-green);
+    --r: 1deg;
+  }
+  .stickies .sticky:nth-child(4n + 4) {
+    --sticky-c: var(--sticky-pink);
+    --r: -1.2deg;
+  }
+  .stickies h3,
+  .checklist h3 {
+    margin-bottom: 0.3em;
+    font-family: var(--font-hand);
+    font-size: 1.55em;
+    font-weight: 700;
+  }
+  .stickies ul {
+    list-style: none;
+    padding: 0;
+    font-size: 0.92em;
+  }
+  .stickies li {
+    margin-top: 0.15em;
+  }
+  .stickies li::before {
+    content: '– ';
+    color: var(--ink-soft);
+  }
+
+  /* ---------- coursework ---------- */
+  .checklists {
+    display: grid;
+    gap: 1.4em;
+  }
+  .checklist h3 {
+    width: fit-content;
+    padding: 0 0.2em;
+    background-image: linear-gradient(transparent 60%, color-mix(in srgb, var(--tab) 80%, transparent) 60%, color-mix(in srgb, var(--tab) 80%, transparent) 92%, transparent 92%);
+  }
+  .checklist ul {
+    list-style: none;
+    padding: 0;
+  }
+  .checklist li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.55em;
+  }
+  .checklist li::before {
+    content: '✓';
+    flex: none;
+    display: inline-grid;
+    place-items: center;
+    width: 1.1em;
+    height: 1.1em;
+    border: 1.5px solid var(--ink-soft);
+    border-radius: 2px;
+    color: var(--pen);
+    font-family: var(--font-hand);
+    font-size: 1.1em;
+    font-weight: 700;
+    line-height: 1;
+    translate: 0 0.15em;
+  }
+
+  /* ---------- certifications ---------- */
+  .stamps {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(12em, 1fr));
+    gap: 1.6em 1.4em;
+    padding: 0.5em 0.3em;
+  }
+  .stamp-wrap {
+    display: block;
+  }
+  .stamp-wrap:nth-child(odd) {
+    --r: -2deg;
+  }
+  .stamp-wrap:nth-child(even) {
+    --r: 1.8deg;
+  }
+  .stamp {
+    --c: #fbd5c0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35em;
+    min-height: 11em;
+    padding: 1.4em 1.3em;
+    background:
+      linear-gradient(var(--c), var(--c)) 9px 9px / calc(100% - 18px) calc(100% - 18px) no-repeat,
+      var(--grain),
+      var(--card);
+    color: var(--ink);
+    text-decoration: none;
+    -webkit-mask:
+      radial-gradient(circle 4px at 6px 6px, #0000 98%, #000) -6px -6px / 12px 12px round,
+      linear-gradient(#000 0 0) 8px 8px / calc(100% - 16px) calc(100% - 16px) no-repeat;
+    mask:
+      radial-gradient(circle 4px at 6px 6px, #0000 98%, #000) -6px -6px / 12px 12px round,
+      linear-gradient(#000 0 0) 8px 8px / calc(100% - 16px) calc(100% - 16px) no-repeat;
+  }
+  .stamp-wrap:nth-child(4n + 2) .stamp {
+    --c: #cfe5f7;
+  }
+  .stamp-wrap:nth-child(4n + 3) .stamp {
+    --c: #d9f0cf;
+  }
+  .stamp-wrap:nth-child(4n + 4) .stamp {
+    --c: #f5d0e3;
+  }
+  .stamp-issuer,
+  .stamp-foot {
+    font-family: var(--font-type);
+    font-size: 0.68em;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+  }
+  .stamp-title {
+    flex: 1;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.08em;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+  .stamp-verify {
+    color: var(--pen);
+    font-family: var(--font-hand);
+    font-size: 1.2em;
+    line-height: 1;
+  }
+  a.stamp:hover .stamp-verify {
+    text-decoration: underline wavy;
+  }
+
+  /* ---------- library ---------- */
+  .shelf-h {
+    color: var(--pen);
+    font-family: var(--font-hand);
+    font-size: 1.9em;
+    rotate: -1deg;
+  }
+  .checkouts,
+  .clippings,
+  .cassettes {
+    display: grid;
+    gap: 1.2em;
+  }
+  .checkout {
+    position: relative;
+    padding: 0.8em 1em 0.9em;
+    background-color: #f7f0dc;
+    background-image:
+      repeating-linear-gradient(transparent 0 1.55em, rgba(70, 120, 200, 0.18) 1.55em calc(1.55em + 1px)),
+      var(--grain);
+    border-top: 0.5em solid #b5544a;
+    box-shadow: var(--shadow);
+    rotate: -0.6deg;
+  }
+  .checkout:nth-child(even) {
+    rotate: 0.8deg;
+  }
+  .checkout-title {
+    margin: 0;
+    font-family: var(--font-type);
+    font-size: 1.02em;
+    line-height: 1.35;
+  }
+  .checkout-title a {
+    color: inherit;
+  }
+  .checkout-author {
+    margin: 0.1em 0 0.4em;
+    color: var(--ink-soft);
+    font-family: var(--font-hand);
+    font-size: 1.3em;
+    line-height: 1.1;
+  }
+  .checkout-stamp {
+    position: absolute;
+    top: 0.8em;
+    right: 0.8em;
+  }
+  .checkout-note {
+    margin: 0.3em 0 0;
+    font-size: 0.92em;
+  }
+  .clipping-wrap {
+    display: block;
+  }
+  .clipping-wrap:nth-child(odd) {
+    --r: -1deg;
+  }
+  .clipping-wrap:nth-child(even) {
+    --r: 1.2deg;
+  }
+  .clipping {
+    display: block;
+    padding: 1em 1.1em 1.1em;
+    background-color: #efebe1;
+    background-image: var(--grain);
+    color: #222;
+    text-decoration: none;
+  }
+  .clipping-src {
+    display: block;
+    color: #666;
+    font-family: var(--font-type);
+    font-size: 0.68em;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .clipping-title {
+    display: block;
+    margin: 0.2em 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.25em;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .clipping:hover .clipping-title {
+    text-decoration: underline;
+  }
+  .clipping-note {
+    display: block;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 0.92em;
+    color: #444;
+  }
+  .cassette {
+    position: relative;
+    display: grid;
+    gap: 0.5em;
+    padding: 0.8em;
+    border-radius: 0.6em;
+    background: #2d2b33;
+    color: var(--ink);
+    text-decoration: none;
+    box-shadow: var(--shadow-lift);
+    rotate: -0.8deg;
+  }
+  .cassette:nth-child(even) {
+    rotate: 0.9deg;
+  }
+  .cassette-label {
+    display: block;
+    padding: 0.4em 0.7em;
+    border-radius: 0.3em;
+    background-color: #fdf8ec;
+    background-image: linear-gradient(transparent 1.7em, #e85d75 1.7em, #e85d75 calc(1.7em + 2px), transparent calc(1.7em + 2px));
+  }
+  .cassette-title {
+    display: block;
+    font-family: var(--font-hand);
+    font-size: 1.4em;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+  .cassette-meta {
+    display: block;
+    color: var(--ink-soft);
+    font-family: var(--font-type);
+    font-size: 0.7em;
+    letter-spacing: 0.06em;
+  }
+  .cassette-reels {
+    display: flex;
+    justify-content: center;
+    gap: 4em;
+  }
+  .cassette-reels span {
+    width: 2.2em;
+    height: 2.2em;
+    border-radius: 50%;
+    background: radial-gradient(circle, #2d2b33 0 28%, #d9d4c8 30% 62%, #8b867c 64%);
+  }
+  .cassette-note {
+    color: #ddd6c6;
+    font-size: 0.88em;
+  }
+
+  /* ---------- say hi ---------- */
+  .envelope {
+    position: relative;
+    overflow: hidden;
+    padding: 4.6em 1.4em 1.6em;
+    border-radius: 3px;
+    background-color: #f7efe0;
+    background-image: var(--grain);
+    box-shadow: var(--shadow-lift);
+    rotate: -1.2deg;
+  }
+  .envelope::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3.8em;
+    background: linear-gradient(#e8d9bd, #efe3cc);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+  }
+  .env-stamp {
+    position: absolute;
+    z-index: 1;
+    top: 0.8em;
+    right: 0.9em;
+    display: grid;
+    place-items: center;
+    width: 3.4em;
+    height: 4em;
+    border: 2px dashed rgba(192, 57, 43, 0.5);
+    background: #fbd5c0;
+    rotate: 6deg;
+  }
+  .env-stamp :global(.doodle) {
+    width: 2.2em;
+    height: 2.2em;
+    color: var(--stamp);
+  }
+  .env-to {
+    margin: 0 0 0.2em;
+    color: var(--ink-soft);
+    font-family: var(--font-type);
+    font-size: 0.75em;
+    letter-spacing: 0.06em;
+  }
+  .env-mail {
+    position: relative;
+    font-family: var(--font-hand);
+    font-size: 1.9em;
+    font-weight: 700;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+  .colophon {
+    padding-top: 0.6em;
+    font-family: var(--font-hand);
+    font-size: 1.5em;
+    line-height: 1.2;
+    text-align: center;
+    rotate: -1deg;
+  }
+  .colophon span {
+    display: block;
+    margin-top: 0.3em;
+    color: var(--pencil);
+    font-family: var(--font-type);
+    font-size: 0.45em;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+</style>

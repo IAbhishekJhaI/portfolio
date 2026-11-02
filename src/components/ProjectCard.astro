@@ -1,0 +1,146 @@
+---
+// A project glued into the notebook: an index card up top, then the full write-up,
+// which is free to run over as many pages as it needs.
+import { render, type CollectionEntry } from 'astro:content';
+import { inline } from '../lib/inline';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+}
+
+const { project } = Astro.props;
+const { title, summary, category, stack, period, highlights, links, cover, coverAlt } = project.data;
+const { Content } = await render(project);
+const categoryLabel = { software: 'Software', electronics: 'Electronics', other: 'Other' }[category];
+---
+
+<article class="project" data-split data-break="page" data-anchor={`projects/${project.id}`} data-category={category}>
+  <header class="card">
+    <span class="tape tape--tl tape--blue" aria-hidden="true"></span>
+    <p class="meta"><span class="label">{categoryLabel}</span><span class="date-stamp">{period}</span></p>
+    <h3 class="title">{title}</h3>
+    <ul class="tags" aria-label="Tech used">
+      {stack.map((s) => <li>{s}</li>)}
+    </ul>
+    {
+      (links.live || links.repo || links.writeup) && (
+        <p class="links">
+          {links.live && (
+            <a href={links.live} rel="noopener">
+              live site ↗
+            </a>
+          )}
+          {links.repo && (
+            <a href={links.repo} rel="noopener">
+              source code ↗
+            </a>
+          )}
+          {links.writeup && (
+            <a href={links.writeup} rel="noopener">
+              article ↗
+            </a>
+          )}
+        </p>
+      )
+    }
+  </header>
+  {
+    cover && (
+      <figure class="snapshot" data-keep>
+        <span class="tape tape--top" aria-hidden="true" />
+        <img src={cover} alt={coverAlt ?? ''} />
+      </figure>
+    )
+  }
+  <p class="summary">{summary}</p>
+  {
+    highlights.length > 0 && (
+      <ul class="highlights">
+        {highlights.map((h) => (
+          <li set:html={inline(h)} />
+        ))}
+      </ul>
+    )
+  }
+  <div class="prose" data-split><Content /></div>
+</article>
+
+<style>
+  .project > * + * {
+    margin-top: 1em;
+  }
+  .card {
+    position: relative;
+    margin: 0.5em 0.2em 0;
+    padding: 0.9em 1.1em 1em;
+    background-color: var(--card);
+    background-image:
+      linear-gradient(transparent 2.7em, var(--margin-line) 2.7em, var(--margin-line) calc(2.7em + 1.5px), transparent calc(2.7em + 1.5px)),
+      var(--grain);
+    box-shadow: var(--shadow);
+    rotate: -0.7deg;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em 0.8em;
+    margin: 0 0 0.75em;
+  }
+  .title {
+    margin: 0 0 0.35em;
+    font-family: var(--font-hand);
+    font-size: 2.3em;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.2em 1.1em;
+    margin: 0.8em 0 0;
+    font-family: var(--font-hand);
+    font-size: 1.3em;
+    line-height: 1.2;
+  }
+  .snapshot {
+    position: relative;
+    width: 86%;
+    margin-inline: auto;
+    padding: 0.5em 0.5em 1.4em;
+    background: #fff;
+    box-shadow: var(--shadow-lift);
+    rotate: 1.2deg;
+  }
+  .summary {
+    font-size: 1.05em;
+  }
+  .highlights {
+    color: var(--ink-soft);
+    font-size: 0.95em;
+  }
+  .highlights :global(strong) {
+    color: var(--ink);
+  }
+  .prose {
+    font-size: 0.97em;
+  }
+  .prose :global(h2) {
+    width: fit-content;
+    margin: 0.8em 0 0.25em;
+    padding: 0 0.15em;
+    font-family: var(--font-hand);
+    font-size: 1.7em;
+    font-weight: 700;
+    line-height: 1.1;
+    background-image: linear-gradient(transparent 62%, color-mix(in srgb, var(--tab, var(--sticky-yellow)) 75%, transparent) 62%, color-mix(in srgb, var(--tab, var(--sticky-yellow)) 75%, transparent) 92%, transparent 92%);
+  }
+  .prose > :global(:first-child) {
+    margin-top: 0;
+  }
+  .prose :global(p),
+  .prose :global(ul),
+  .prose :global(ol) {
+    margin: 0 0 0.75em;
+  }
+</style>

@@ -1,0 +1,8 @@
+# Books you've read or are reading. Add an item and it shows up on /library.
+# - title: Designing Data-Intensive Applications
+#   author: Martin Kleppmann
+#   status: read          # read | reading
+#   year: 2026            # optional: when you read it
+#   note: One line on why it's worth reading.   # optional
+#   url: https://...      # optional
+[]

@@ -1,0 +1,51 @@
+---
+// One chapter of the notebook. Its children are the "blocks" the paginator pours onto pages;
+// the first block is always the chapter's title page, which opens a new spread on its own.
+//   data-split   block may be split across pages by its children
+//   data-keep    block always moves to the next page whole
+//   data-break   "page" | "spread": start this block on a fresh page / left-hand page
+//   data-anchor  deep-link target, e.g. #projects/hacksync
+import Doodle from './Doodle.astro';
+
+interface Props {
+  id: string;
+  tab: string;
+  color: string;
+  title?: string;
+  note?: string;
+  paper?: 'ruled' | 'grid' | 'plain';
+  doodle?: 'star' | 'arrow' | 'squiggle' | 'heart' | 'spark' | 'coffee' | 'spiral' | 'flower';
+  /** false when the title slot brings its own heading */
+  heading?: boolean;
+}
+
+const { id, tab, color, title = tab, note, paper = 'ruled', doodle = 'star', heading = true } = Astro.props;
+---
+
+<section
+  class="chapter"
+  id={id}
+  data-chapter={id}
+  data-tab={tab}
+  data-color={color}
+  data-paper={paper}
+  style={`--tab: ${color}`}
+  aria-label={title}
+>
+  <div class="title-page" data-break="spread" data-solo data-paper="title">
+    {
+      heading && (
+        <>
+          <div class="title-scrap">
+            <span class="tape tape--top" aria-hidden="true" />
+            <h2 class="chapter-title torn">{title}</h2>
+          </div>
+          {note && <p class="chapter-note">{note}</p>}
+        </>
+      )
+    }
+    <slot name="title" />
+    <Doodle name={doodle} class="title-doodle" />
+  </div>
+  <slot />
+</section>
